@@ -24,7 +24,7 @@ btuForm.addEventListener("submit", (event) => {
   const btu = Math.round(area * factor / 100) * 100;
   result.textContent = `ขนาดห้องประมาณ ${area.toFixed(1)} ตร.ม. แนะนำแอร์ประมาณ ${btu.toLocaleString("th-TH")} BTU`;
 });
-const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?output=csv";
+const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=0&single=true&output=csv";
 const newsCards = document.getElementById("newsCards");
 const REVIEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=2024619029&single=true&output=csv";
 const reviewList = document.getElementById("reviewList");
@@ -87,12 +87,22 @@ function renderNews(items) {
     const category = getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว";
     const title = getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]);
     const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
+    const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
     const link = getField(item, ["link", "url", "ลิงก์"]);
 
     if (!title) return;
 
     const article = document.createElement("article");
     article.className = "card";
+
+    if (image) {
+      const imageElement = document.createElement("img");
+      imageElement.className = "news-img";
+      imageElement.src = image;
+      imageElement.alt = title;
+      imageElement.loading = "lazy";
+      article.append(imageElement);
+    }
 
     const tag = document.createElement("span");
     tag.className = "tag";
@@ -175,6 +185,15 @@ function renderReviews(items) {
     }
 
     const content = document.createElement("div");
+    if (image) {
+      const imageElement = document.createElement("img");
+      imageElement.className = "news-img";
+      imageElement.src = image;
+      imageElement.alt = title;
+      imageElement.loading = "lazy";
+      article.append(imageElement);
+    }
+
     const tag = document.createElement("span");
     tag.className = "tag";
     tag.textContent = category;
