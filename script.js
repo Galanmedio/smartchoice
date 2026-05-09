@@ -30,6 +30,8 @@ const REVIEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tV
 const reviewList = document.getElementById("reviewList");
 const VIDEOS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=1483108495&single=true&output=csv";
 const videoList = document.getElementById("videoList");
+const DEALS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=907064744&single=true&output=csv";
+const dealGrid = document.getElementById("dealGrid");
 
 function parseCsv(text) {
   const rows = [];
@@ -305,6 +307,88 @@ async function loadVideos() {
     videoList.innerHTML = '<article class="video-card"><div class="video-placeholder">YouTube</div><h3>โหลดวิดีโอไม่สำเร็จ</h3><p>ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</p></article>';
   }
 }
+
+function renderDeals(items) {
+  if (!dealGrid) return;
+
+  dealGrid.innerHTML = "";
+  if (!items.length) {
+    dealGrid.innerHTML = '<div class="product"><span>Deal</span><h3>ยังไม่มีดีลแนะนำ</h3><p>เพิ่มสินค้าใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</p></div>';
+    return;
+  }
+
+  items.forEach(item => {
+    const category = getField(item, ["category", "หมวด", "หมวดสินค้า"]) || "Deal";
+    const title = getField(item, ["title", "ชื่อสินค้า", "หัวข้อ"]);
+    const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
+    const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
+    const price = getField(item, ["price", "ราคา", "โปร"]);
+    const link = getField(item, ["link", "url", "ลิงก์"]);
+
+    if (!title) return;
+
+    const product = document.createElement("div");
+    product.className = "product";
+
+    if (image) {
+      const imageElement = document.createElement("img");
+      imageElement.className = "product-img";
+      imageElement.src = image;
+      imageElement.alt = title;
+      imageElement.loading = "lazy";
+      product.append(imageElement);
+    } else {
+      const badge = document.createElement("span");
+      badge.textContent = category.slice(0, 6);
+      product.append(badge);
+    }
+
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    product.append(heading);
+
+    if (price) {
+      const priceElement = document.createElement("strong");
+      priceElement.className = "price";
+      priceElement.textContent = price;
+      product.append(priceElement);
+    }
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent = description;
+    product.append(paragraph);
+
+    if (link) {
+      const anchor = document.createElement("a");
+      anchor.className = "btn btn-small";
+      anchor.href = link;
+      anchor.target = "_blank";
+      anchor.rel = "noopener";
+      anchor.textContent = "ดูดีล";
+      product.append(anchor);
+    }
+
+    dealGrid.append(product);
+  });
+}
+
+async function loadDeals() {
+  if (!dealGrid) return;
+
+  try {
+    const response = await fetch(DEALS_CSV_URL);
+    if (!response.ok) throw new Error("Cannot load deals CSV");
+
+    const csv = await response.text();
+    const rows = parseCsv(csv);
+    const headers = rows.shift().map(header => header.trim());
+    const items = rows.map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+    renderDeals(items);
+  } catch (error) {
+    dealGrid.innerHTML = '<div class="product"><span>Deal</span><h3>โหลดดีลไม่สำเร็จ</h3><p>ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</p></div>';
+  }
+}
 loadNews();
 loadReviews();
 loadVideos();
+loadDeals();
