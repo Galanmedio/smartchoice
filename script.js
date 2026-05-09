@@ -28,6 +28,8 @@ const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZ
 const newsCards = document.getElementById("newsCards");
 const REVIEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=2024619029&single=true&output=csv";
 const reviewList = document.getElementById("reviewList");
+const VIDEOS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=1483108495&single=true&output=csv";
+const videoList = document.getElementById("videoList");
 
 function parseCsv(text) {
   const rows = [];
@@ -213,5 +215,96 @@ async function loadReviews() {
     reviewList.innerHTML = '<article><div class="thumb">รีวิว</div><div><h3>โหลดรีวิวไม่สำเร็จ</h3><p>ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</p></div></article>';
   }
 }
+
+function getYouTubeId(url) {
+  if (!url) return "";
+
+  const trimmedUrl = url.trim();
+  const plainId = trimmedUrl.match(/^[a-zA-Z0-9_-]{11}$/);
+  if (plainId) return trimmedUrl;
+
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+    if (parsedUrl.hostname.includes("youtu.be")) return parsedUrl.pathname.replace("/", "").slice(0, 11);
+    if (parsedUrl.searchParams.get("v")) return parsedUrl.searchParams.get("v").slice(0, 11);
+
+    const embedMatch = parsedUrl.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+    if (embedMatch) return embedMatch[1];
+
+    const shortsMatch = parsedUrl.pathname.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
+    if (shortsMatch) return shortsMatch[1];
+  } catch (error) {
+    return "";
+  }
+
+  return "";
+}
+
+function renderVideos(items) {
+  if (!videoList) return;
+
+  videoList.innerHTML = "";
+  if (!items.length) {
+    videoList.innerHTML = '<article class="video-card"><div class="video-placeholder">YouTube</div><h3>ยังไม่มีวิดีโอ</h3><p>เพิ่มวิดีโอใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</p></article>';
+    return;
+  }
+
+  items.forEach(item => {
+    const title = getField(item, ["title", "หัวข้อ", "ชื่อวิดีโอ"]);
+    const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
+    const youtube = getField(item, ["youtube", "video", "url", "link", "ลิงก์"]);
+    const videoId = getYouTubeId(youtube);
+
+    if (!title && !videoId) return;
+
+    const article = document.createElement("article");
+    article.className = "video-card";
+
+    if (videoId) {
+      const frame = document.createElement("iframe");
+      frame.src = `https://www.youtube.com/embed/${videoId}`;
+      frame.title = title || "YouTube video";
+      frame.loading = "lazy";
+      frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      frame.allowFullscreen = true;
+      article.append(frame);
+    } else {
+      const placeholder = document.createElement("div");
+      placeholder.className = "video-placeholder";
+      placeholder.textContent = "YouTube";
+      article.append(placeholder);
+    }
+
+    const heading = document.createElement("h3");
+    heading.textContent = title || "วิดีโอจากช่อง";
+    article.append(heading);
+
+    if (description) {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = description;
+      article.append(paragraph);
+    }
+
+    videoList.append(article);
+  });
+}
+
+async function loadVideos() {
+  if (!videoList) return;
+
+  try {
+    const response = await fetch(VIDEOS_CSV_URL);
+    if (!response.ok) throw new Error("Cannot load videos CSV");
+
+    const csv = await response.text();
+    const rows = parseCsv(csv);
+    const headers = rows.shift().map(header => header.trim());
+    const items = rows.map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+    renderVideos(items);
+  } catch (error) {
+    videoList.innerHTML = '<article class="video-card"><div class="video-placeholder">YouTube</div><h3>โหลดวิดีโอไม่สำเร็จ</h3><p>ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</p></article>';
+  }
+}
 loadNews();
 loadReviews();
+loadVideos();
