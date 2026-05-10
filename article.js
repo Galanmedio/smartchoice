@@ -56,33 +56,100 @@ function resolveImageUrl(image) {
 }
 
 function getArticleImages(item) {
-  const imageFields = [
-    getField(item, ["image", "รูป", "รูปภาพ"]),
-    getField(item, ["image2", "รูป2", "รูปภาพ2"]),
-    getField(item, ["image3", "รูป3", "รูปภาพ3"]),
-    getField(item, ["image4", "รูป4", "รูปภาพ4"]),
-  ];
+  const imageFields = {
+    image: getField(item, ["image", "รูป", "รูปภาพ"]),
+    image1: getField(item, ["image", "รูป", "รูปภาพ"]),
+    image2: getField(item, ["image2", "รูป2", "รูปภาพ2"]),
+    image3: getField(item, ["image3", "รูป3", "รูปภาพ3"]),
+    image4: getField(item, ["image4", "รูป4", "รูปภาพ4"]),
+  };
   const galleryField = getField(item, ["images", "gallery", "รูปทั้งหมด", "แกลเลอรี"]);
   const galleryImages = galleryField
     .split(/\n|,|\|/)
     .map(image => image.trim())
     .filter(Boolean);
 
-  return [...imageFields, ...galleryImages]
-    .map(resolveImageUrl)
+  const byKey = Object.fromEntries(
+    Object.entries(imageFields).map(([key, image]) => [key, resolveImageUrl(image)])
+  );
+  const all = [byKey.image, byKey.image2, byKey.image3, byKey.image4, ...galleryImages.map(resolveImageUrl)]
     .filter(Boolean)
     .filter((image, index, images) => images.indexOf(image) === index);
+
+  return { all, byKey };
 }
 
-function renderParagraphs(container, text) {
+function renderInlineImage(container, image, alt) {
+  if (!image) return false;
+
+  const figure = document.createElement("figure");
+  figure.className = "article-inline-image";
+
+  const imageElement = document.createElement("img");
+  imageElement.className = "article-image";
+  imageElement.src = image;
+  imageElement.alt = alt;
+  imageElement.loading = "lazy";
+
+  figure.append(imageElement);
+  container.append(figure);
+  return true;
+}
+
+function renderParagraphs(container, text, imagesByKey, title) {
+  const tokenPattern = /\[(image|image1|image2|image3|image4|รูป|รูป1|รูป2|รูป3|รูป4)\]/gi;
+  const tokenMap = {
+    image: "image",
+    image1: "image1",
+    image2: "image2",
+    image3: "image3",
+    image4: "image4",
+    "รูป": "image",
+    "รูป1": "image1",
+    "รูป2": "image2",
+    "รูป3": "image3",
+    "รูป4": "image4",
+  };
+
   text
     .split(/\n{2,}|\r\n{2,}/)
     .map(paragraph => paragraph.trim())
     .filter(Boolean)
     .forEach(paragraph => {
-      const element = document.createElement("p");
-      element.textContent = paragraph;
-      container.append(element);
+      const parts = paragraph.split(tokenPattern);
+
+      if (parts.length === 1) {
+        const element = document.createElement("p");
+        element.textContent = paragraph;
+        container.append(element);
+        return;
+      }
+
+      let textBuffer = "";
+      for (let i = 0; i < parts.length; i += 1) {
+        const part = parts[i];
+        const imageKey = tokenMap[part?.toLowerCase?.()];
+
+        if (!imageKey) {
+          textBuffer += part;
+          continue;
+        }
+
+        if (textBuffer.trim()) {
+          const element = document.createElement("p");
+          element.textContent = textBuffer.trim();
+          container.append(element);
+          textBuffer = "";
+        }
+
+        renderInlineImage(container, imagesByKey[imageKey], title);
+      }
+
+      if (textBuffer.trim()) {
+        const element = document.createElement("p");
+        element.textContent = textBuffer.trim();
+        container.append(element);
+      }
     });
 }
 
@@ -113,11 +180,13 @@ function renderArticle(item) {
     articleDetail.append(lead);
   }
 
-  if (images.length) {
-    const gallery = document.createElement("div");
-    gallery.className = images.length > 1 ? "article-gallery" : "article-gallery single";
+  const hasInlineImageTokens = /\[(image|image1|image2|image3|image4|รูป|รูป1|รูป2|รูป3|รูป4)\]/i.test(content);
 
-    images.forEach((image, index) => {
+  if (images.all.length && !hasInlineImageTokens) {
+    const gallery = document.createElement("div");
+    gallery.className = images.all.length > 1 ? "article-gallery" : "article-gallery single";
+
+    images.all.forEach((image, index) => {
       const imageElement = document.createElement("img");
       imageElement.className = "article-image";
       imageElement.src = image;
@@ -131,7 +200,7 @@ function renderArticle(item) {
 
   const body = document.createElement("div");
   body.className = "article-body";
-  renderParagraphs(body, content);
+  renderParagraphs(body, content, images.byKey, title);
   articleDetail.append(body);
 
   const actions = document.createElement("div");
