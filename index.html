@@ -10,23 +10,23 @@
   <meta property="og:type" content="website" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="news-theme">
   <header class="site-header">
     <nav class="nav container">
       <a href="#home" class="brand">
-        <div class="logo">ฉลาด<br><span>เลือก</span></div>
+        <div class="logo">SC</div>
         <div>
-          <strong>Smart Choice</strong>
+          <strong>SMART CHOICE</strong>
           <small>ฉลาดเลือกก่อนซื้อ</small>
         </div>
       </a>
       <button class="menu-btn" id="menuBtn" aria-label="เปิดเมนู">☰</button>
       <div class="nav-links" id="navLinks">
-        <a href="#reviews">รีวิว</a>
         <a href="#news">ข่าว</a>
-        <a href="#guides">วิธีเลือกซื้อ</a>
-        <a href="#compare">เปรียบเทียบ</a>
-        <a href="#tools">เครื่องมือ</a>
+        <a href="#reviews">รีวิว</a>
+        <a href="#deals">ดีล</a>
+        <a href="#guides">คู่มือ</a>
+        <a href="#videos">วิดีโอ</a>
         <a href="#sponsor">สปอนเซอร์</a>
         <a class="btn btn-small" href="#contact">ติดต่อ</a>
       </div>
@@ -34,31 +34,20 @@
   </header>
 
   <main id="home">
-    <section class="hero">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <span class="eyebrow">รีวิวจริง • คู่มือเข้าใจง่าย • เลือกให้คุ้ม</span>
-          <h1>ฉลาดเลือกก่อนซื้อ เครื่องใช้ไฟฟ้า เทคโนโลยี และยานยนต์</h1>
-          <p>ศูนย์รวมรีวิว คู่มือเลือกซื้อ ตารางเปรียบเทียบ และวิดีโอจากช่อง Smart Choice เพื่อช่วยให้คุณตัดสินใจก่อนเสียเงินได้มั่นใจขึ้น</p>
-          <div class="hero-actions">
-            <a class="btn" href="#guides">ดูคู่มือเลือกซื้อ</a>
-            <a class="btn btn-outline" href="#deals">ดูสินค้าน่าใช้</a>
-          </div>
-        </div>
-        <div class="hero-card">
-          <h3>หมวดหมู่ยอดนิยม</h3>
-          <div class="category-grid">
-            <a href="#air">แอร์</a>
-            <a href="#tv">ทีวี</a>
-            <a href="#washer">เครื่องซักผ้า</a>
-            <a href="#internet">เน็ตบ้าน</a>
-            <a href="#auto">ฟิล์มรถยนต์</a>
-            <a href="#camera">กล้องติดรถ</a>
-          </div>
-        </div>
+    <section class="section container" id="news">
+      <div class="section-head">
+        <span class="eyebrow">News</span>
+        <h2>ข่าวสารและอัปเดตล่าสุด</h2>
+        <p>รวมข่าวสินค้า เทรนด์เทคโนโลยี โปรโมชัน และประเด็นที่ควรรู้ก่อนตัดสินใจซื้อ</p>
+      </div>
+      <div class="news-front" id="newsCards">
+        <article class="card">
+          <span class="tag">News</span>
+          <h3>กำลังโหลดข่าวล่าสุด</h3>
+          <p>ระบบกำลังดึงข้อมูลจาก Google Sheets</p>
+        </article>
       </div>
     </section>
-
     <section class="section container" id="guides">
       <div class="section-head">
         <span class="eyebrow">Buying Guide</span>
@@ -87,20 +76,6 @@
       </div>
     </section>
 
-    <section class="section container" id="news">
-      <div class="section-head">
-        <span class="eyebrow">News</span>
-        <h2>ข่าวสารและอัปเดตล่าสุด</h2>
-        <p>รวมข่าวสินค้า เทรนด์เทคโนโลยี โปรโมชัน และประเด็นที่ควรรู้ก่อนตัดสินใจซื้อ</p>
-      </div>
-      <div class="cards" id="newsCards">
-        <article class="card">
-          <span class="tag">News</span>
-          <h3>กำลังโหลดข่าวล่าสุด</h3>
-          <p>ระบบกำลังดึงข้อมูลจาก Google Sheets</p>
-        </article>
-      </div>
-    </section>
     <section class="section alt" id="reviews">
       <div class="container">
         <div class="section-head">

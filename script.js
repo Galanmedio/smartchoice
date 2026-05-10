@@ -85,28 +85,36 @@ function renderNews(items) {
 
   newsCards.innerHTML = "";
   if (!items.length) {
-    newsCards.innerHTML = '<article class="card"><span class="tag">News</span><h3>ยังไม่มีข่าว</h3><p>เพิ่มข่าวใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</p></article>';
+    newsCards.innerHTML = '<article class="news-feature"><span class="tag">News</span><h3>ยังไม่มีข่าว</h3><p>เพิ่มข่าวใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</p></article>';
     return;
   }
 
-  items.forEach((item, index) => {
+  const validItems = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]));
+
+  const featured = validItems[0];
+  const sideItems = validItems.slice(1, 4);
+
+  if (featured) {
+    const { item, index } = featured;
     const category = getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว";
     const title = getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]);
     const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
     const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
 
-    if (!title) return;
-
     const article = document.createElement("article");
-    article.className = "card";
+    article.className = "news-feature";
 
     if (image) {
+      const imageLink = document.createElement("a");
+      imageLink.href = "article.html?type=news&id=" + index;
       const imageElement = document.createElement("img");
-      imageElement.className = "news-img";
       imageElement.src = image;
       imageElement.alt = title;
       imageElement.loading = "lazy";
-      article.append(imageElement);
+      imageLink.append(imageElement);
+      article.append(imageLink);
     }
 
     const tag = document.createElement("span");
@@ -114,22 +122,58 @@ function renderNews(items) {
     tag.textContent = category;
 
     const heading = document.createElement("h3");
-    heading.textContent = title;
+    const headingLink = document.createElement("a");
+    headingLink.href = "article.html?type=news&id=" + index;
+    headingLink.textContent = title;
+    heading.append(headingLink);
 
     const paragraph = document.createElement("p");
-    paragraph.textContent = makeExcerpt(description, 130);
+    paragraph.textContent = makeExcerpt(description, 120);
 
     article.append(tag, heading, paragraph);
-
-    const anchor = document.createElement("a");
-    anchor.href = "article.html?type=news&id=" + index;
-    anchor.textContent = "\u0e2d\u0e48\u0e32\u0e19\u0e15\u0e48\u0e2d \u2192";
-    article.append(anchor);
-
     newsCards.append(article);
-  });
-}
+  }
 
+  const sideList = document.createElement("div");
+  sideList.className = "news-side-list";
+
+  sideItems.forEach(({ item, index }) => {
+    const title = getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]);
+    const category = getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว";
+    const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
+
+    const article = document.createElement("article");
+    article.className = "news-side-item";
+
+    if (image) {
+      const imageLink = document.createElement("a");
+      imageLink.href = "article.html?type=news&id=" + index;
+      const imageElement = document.createElement("img");
+      imageElement.src = image;
+      imageElement.alt = title;
+      imageElement.loading = "lazy";
+      imageLink.append(imageElement);
+      article.append(imageLink);
+    }
+
+    const content = document.createElement("div");
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = category;
+
+    const heading = document.createElement("h3");
+    const headingLink = document.createElement("a");
+    headingLink.href = "article.html?type=news&id=" + index;
+    headingLink.textContent = title;
+    heading.append(headingLink);
+
+    content.append(tag, heading);
+    article.append(content);
+    sideList.append(article);
+  });
+
+  newsCards.append(sideList);
+}
 async function loadNews() {
   if (!newsCards) return;
 
