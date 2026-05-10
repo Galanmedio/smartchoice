@@ -67,6 +67,12 @@ function parseCsv(text) {
   return rows;
 }
 
+function makeExcerpt(text, limit = 150) {
+  const cleanText = (text || "").replace(/\s+/g, " ").trim();
+  if (cleanText.length <= limit) return cleanText;
+  return `${cleanText.slice(0, limit).trim()}...`;
+}
+
 function getField(item, names) {
   for (const name of names) {
     if (item[name]) return item[name];
@@ -111,7 +117,7 @@ function renderNews(items) {
     heading.textContent = title;
 
     const paragraph = document.createElement("p");
-    paragraph.textContent = description;
+    paragraph.textContent = makeExcerpt(description, 130);
 
     article.append(tag, heading, paragraph);
 
@@ -188,7 +194,7 @@ function renderReviews(items) {
     heading.textContent = title;
 
     const paragraph = document.createElement("p");
-    paragraph.textContent = description;
+    paragraph.textContent = makeExcerpt(description, 130);
 
     content.append(tag, heading, paragraph);
 
@@ -284,7 +290,7 @@ function renderVideos(items) {
 
     if (description) {
       const paragraph = document.createElement("p");
-      paragraph.textContent = description;
+      paragraph.textContent = makeExcerpt(description, 130);
       article.append(paragraph);
     }
 
@@ -354,7 +360,7 @@ function renderDeals(items) {
     }
 
     const paragraph = document.createElement("p");
-    paragraph.textContent = description;
+    paragraph.textContent = makeExcerpt(description, 130);
     product.append(paragraph);
 
     if (link) {
