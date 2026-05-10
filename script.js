@@ -83,12 +83,11 @@ function renderNews(items) {
     return;
   }
 
-  items.forEach(item => {
+  items.forEach((item, index) => {
     const category = getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว";
     const title = getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]);
     const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
     const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
-    const link = getField(item, ["link", "url", "ลิงก์"]);
 
     if (!title) return;
 
@@ -116,14 +115,10 @@ function renderNews(items) {
 
     article.append(tag, heading, paragraph);
 
-    if (link) {
-      const anchor = document.createElement("a");
-      anchor.href = link;
-      anchor.target = "_blank";
-      anchor.rel = "noopener";
-      anchor.textContent = "อ่านต่อ →";
-      article.append(anchor);
-    }
+    const anchor = document.createElement("a");
+    anchor.href = "article.html?type=news&id=" + index;
+    anchor.textContent = "\u0e2d\u0e48\u0e32\u0e19\u0e15\u0e48\u0e2d \u2192";
+    article.append(anchor);
 
     newsCards.append(article);
   });
@@ -162,12 +157,11 @@ function renderReviews(items) {
     return;
   }
 
-  items.forEach(item => {
+  items.forEach((item, index) => {
     const category = getField(item, ["category", "หมวด", "หมวดรีวิว"]) || "รีวิว";
     const title = getField(item, ["title", "หัวข้อ", "หัวข้อรีวิว"]);
     const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
     const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
-    const link = getField(item, ["link", "url", "ลิงก์"]);
 
     if (!title) return;
 
@@ -185,14 +179,6 @@ function renderReviews(items) {
     }
 
     const content = document.createElement("div");
-    if (image) {
-      const imageElement = document.createElement("img");
-      imageElement.className = "news-img";
-      imageElement.src = image;
-      imageElement.alt = title;
-      imageElement.loading = "lazy";
-      article.append(imageElement);
-    }
 
     const tag = document.createElement("span");
     tag.className = "tag";
@@ -206,14 +192,10 @@ function renderReviews(items) {
 
     content.append(tag, heading, paragraph);
 
-    if (link) {
-      const anchor = document.createElement("a");
-      anchor.href = link;
-      anchor.target = "_blank";
-      anchor.rel = "noopener";
-      anchor.textContent = "อ่านต่อ →";
-      content.append(anchor);
-    }
+    const anchor = document.createElement("a");
+    anchor.href = "article.html?type=reviews&id=" + index;
+    anchor.textContent = "\u0e2d\u0e48\u0e32\u0e19\u0e15\u0e48\u0e2d \u2192";
+    content.append(anchor);
 
     article.append(media, content);
     reviewList.append(article);
@@ -342,8 +324,6 @@ function renderDeals(items) {
     const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
     const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
     const price = getField(item, ["price", "ราคา", "โปร"]);
-    const link = getField(item, ["link", "url", "ลิงก์"]);
-
     if (!title) return;
 
     const product = document.createElement("div");
