@@ -55,6 +55,25 @@ function resolveImageUrl(image) {
   return image.replace(/^\/+/, "");
 }
 
+function getArticleImages(item) {
+  const imageFields = [
+    getField(item, ["image", "รูป", "รูปภาพ"]),
+    getField(item, ["image2", "รูป2", "รูปภาพ2"]),
+    getField(item, ["image3", "รูป3", "รูปภาพ3"]),
+    getField(item, ["image4", "รูป4", "รูปภาพ4"]),
+  ];
+  const galleryField = getField(item, ["images", "gallery", "รูปทั้งหมด", "แกลเลอรี"]);
+  const galleryImages = galleryField
+    .split(/\n|,|\|/)
+    .map(image => image.trim())
+    .filter(Boolean);
+
+  return [...imageFields, ...galleryImages]
+    .map(resolveImageUrl)
+    .filter(Boolean)
+    .filter((image, index, images) => images.indexOf(image) === index);
+}
+
 function renderParagraphs(container, text) {
   text
     .split(/\n{2,}|\r\n{2,}/)
@@ -72,7 +91,7 @@ function renderArticle(item) {
   const title = getField(item, ["title", "หัวข้อ", "หัวข้อข่าว", "หัวข้อรีวิว"]);
   const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
   const content = getField(item, ["content", "body", "article", "เนื้อหา", "บทความ"]) || description;
-  const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
+  const images = getArticleImages(item);
   const link = getField(item, ["link", "url", "ลิงก์"]);
 
   document.title = `${title || "บทความ"} | Smart Choice ฉลาดเลือก`;
@@ -94,12 +113,20 @@ function renderArticle(item) {
     articleDetail.append(lead);
   }
 
-  if (image) {
-    const imageElement = document.createElement("img");
-    imageElement.className = "article-image";
-    imageElement.src = image;
-    imageElement.alt = title;
-    articleDetail.append(imageElement);
+  if (images.length) {
+    const gallery = document.createElement("div");
+    gallery.className = images.length > 1 ? "article-gallery" : "article-gallery single";
+
+    images.forEach((image, index) => {
+      const imageElement = document.createElement("img");
+      imageElement.className = "article-image";
+      imageElement.src = image;
+      imageElement.alt = index === 0 ? title : `${title} ${index + 1}`;
+      imageElement.loading = "lazy";
+      gallery.append(imageElement);
+    });
+
+    articleDetail.append(gallery);
   }
 
   const body = document.createElement("div");
