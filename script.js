@@ -28,6 +28,8 @@ const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZ
 const newsCards = document.getElementById("newsCards");
 const GUIDES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=670004676&single=true&output=csv";
 const guideCards = document.getElementById("guideCards");
+const COMPARE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=108241639&single=true&output=csv";
+const compareTableBody = document.getElementById("compareTableBody");
 const REVIEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=2024619029&single=true&output=csv";
 const reviewList = document.getElementById("reviewList");
 const VIDEOS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=1483108495&single=true&output=csv";
@@ -322,6 +324,57 @@ async function loadGuides() {
     renderGuides(items);
   } catch (error) {
     guideCards.innerHTML = '<article class="card"><span class="tag">Guide</span><h3>โหลดข้อมูลเราช่วยเลือกไม่สำเร็จ</h3><p>ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</p></article>';
+  }
+}
+
+function renderCompare(items) {
+  if (!compareTableBody) return;
+
+  compareTableBody.innerHTML = "";
+  if (!items.length) {
+    compareTableBody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลเปรียบเทียบ เพิ่มข้อมูลใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</td></tr>';
+    return;
+  }
+
+  const rows = items
+    .map(item => ({
+      title: getField(item, ["title", "หัวข้อ", "สินค้า", "ชื่อสินค้า", "name"]),
+      suitable: getField(item, ["suitable", "เหมาะกับ", "เหมาะสำหรับ", "กลุ่มเป้าหมาย"]),
+      highlight: getField(item, ["highlight", "จุดเด่น", "ข้อดี", "เด่น"]),
+      caution: getField(item, ["caution", "ข้อควรระวัง", "ข้อเสีย", "ข้อจำกัด", "เนื้อหา", "description", "รายละเอียด"])
+    }))
+    .filter(item => item.title || item.suitable || item.highlight || item.caution);
+
+  if (!rows.length) {
+    compareTableBody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลเปรียบเทียบ เพิ่มข้อมูลใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</td></tr>';
+    return;
+  }
+
+  rows.forEach(item => {
+    const row = document.createElement("tr");
+    [item.title, item.suitable, item.highlight, item.caution].forEach(value => {
+      const cell = document.createElement("td");
+      cell.textContent = value || "-";
+      row.append(cell);
+    });
+    compareTableBody.append(row);
+  });
+}
+
+async function loadCompare() {
+  if (!compareTableBody) return;
+
+  try {
+    const response = await fetch(COMPARE_CSV_URL);
+    if (!response.ok) throw new Error("Cannot load compare CSV");
+
+    const csv = await response.text();
+    const rows = parseCsv(csv);
+    const headers = rows.shift().map(header => header.trim());
+    const items = rows.map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+    renderCompare(items);
+  } catch (error) {
+    compareTableBody.innerHTML = '<tr><td colspan="4">โหลดข้อมูลเปรียบเทียบไม่สำเร็จ ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</td></tr>';
   }
 }
 
@@ -672,6 +725,7 @@ async function loadDeals() {
 }
 loadNews();
 loadGuides();
+loadCompare();
 loadReviews();
 loadVideos();
 loadDeals();
