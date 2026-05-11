@@ -88,6 +88,11 @@ function getField(item, names) {
   return "";
 }
 
+function isPublishedItem(item) {
+  const status = getField(item, ["status", "สถานะ"]).trim().toLowerCase();
+  return !status || ["publish", "published", "เผยแพร่", "online"].includes(status);
+}
+
 function renderNews(items) {
   if (!newsCards) return;
 
@@ -99,7 +104,7 @@ function renderNews(items) {
 
   const validItems = items
     .map((item, index) => ({ item, index }))
-    .filter(({ item }) => getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]));
+    .filter(({ item }) => isPublishedItem(item) && getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]));
   const categories = [...new Set(validItems.map(({ item }) => getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว"))];
 
   if (activeNewsCategory !== "ทั้งหมด" && !categories.includes(activeNewsCategory)) {
