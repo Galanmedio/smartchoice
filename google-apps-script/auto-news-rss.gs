@@ -50,18 +50,23 @@ function draftNewsFromLinks() {
 
     if (!source || content) continue;
 
-    const page = fetchPageSummary_(source);
-    const draft = createThaiNewsDraft_(page);
+    try {
+      const page = fetchPageSummary_(source, row[indexes.title], row[indexes.description]);
+      const draft = createThaiNewsDraft_(page);
 
-    sheet.getRange(rowIndex + 1, indexes.status + 1).setValue(status || "draft");
-    sheet.getRange(rowIndex + 1, indexes.category + 1).setValue(row[indexes.category] || draft.category || "เทคโนโลยี");
-    sheet.getRange(rowIndex + 1, indexes.title + 1).setValue(row[indexes.title] || draft.title || page.title);
-    sheet.getRange(rowIndex + 1, indexes.description + 1).setValue(row[indexes.description] || draft.description || "");
-    sheet.getRange(rowIndex + 1, indexes.image + 1).setValue(row[indexes.image] || draft.image || page.image || "");
-    sheet.getRange(rowIndex + 1, indexes.content + 1).setValue(draft.content || "");
-    sheet.getRange(rowIndex + 1, indexes.date + 1).setValue(row[indexes.date] || Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd"));
-
-    processed += 1;
+      sheet.getRange(rowIndex + 1, indexes.status + 1).setValue(status || "draft");
+      sheet.getRange(rowIndex + 1, indexes.category + 1).setValue(row[indexes.category] || draft.category || "เทคโนโลยี");
+      sheet.getRange(rowIndex + 1, indexes.title + 1).setValue(row[indexes.title] || draft.title || page.title);
+      sheet.getRange(rowIndex + 1, indexes.description + 1).setValue(row[indexes.description] || draft.description || "");
+      sheet.getRange(rowIndex + 1, indexes.image + 1).setValue(row[indexes.image] || draft.image || page.image || "");
+      sheet.getRange(rowIndex + 1, indexes.content + 1).setValue(draft.content || "");
+      sheet.getRange(rowIndex + 1, indexes.date + 1).setValue(row[indexes.date] || Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd"));
+      processed += 1;
+    } catch (error) {
+      sheet.getRange(rowIndex + 1, indexes.status + 1).setValue("error");
+      sheet.getRange(rowIndex + 1, indexes.description + 1).setValue("ดึงลิงก์นี้ไม่สำเร็จ: " + error.message);
+      processed += 1;
+    }
   }
 }
 
@@ -87,20 +92,26 @@ function getHeaderIndexes_(headers) {
   }, {});
 }
 
-function fetchPageSummary_(url) {
-  const response = UrlFetchApp.fetch(url, {
-    muteHttpExceptions: true,
-    followRedirects: true,
-    headers: {
-      "User-Agent": "Mozilla/5.0 SmartChoiceBot/1.0"
-    }
-  });
+function fetchPageSummary_(url, fallbackTitle, fallbackDescription) {
+  let html = "";
 
-  const html = response.getContentText();
+  try {
+    const response = UrlFetchApp.fetch(url, {
+      muteHttpExceptions: true,
+      followRedirects: true,
+      headers: {
+        "User-Agent": "Mozilla/5.0 SmartChoiceBot/1.0"
+      }
+    });
+    html = response.getContentText();
+  } catch (error) {
+    if (!fallbackTitle && !fallbackDescription) throw error;
+  }
+
   return {
     link: url,
-    title: extractMeta_(html, "og:title") || extractTitle_(html) || url,
-    description: extractMeta_(html, "og:description") || extractMeta_(html, "description") || "",
+    title: extractMeta_(html, "og:title") || extractTitle_(html) || fallbackTitle || url,
+    description: extractMeta_(html, "og:description") || extractMeta_(html, "description") || fallbackDescription || "",
     image: extractMeta_(html, "og:image") || "",
     text: stripHtml_(html).slice(0, 6000)
   };
