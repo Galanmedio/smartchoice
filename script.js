@@ -32,6 +32,7 @@ const VIDEOS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZ
 const videoList = document.getElementById("videoList");
 const DEALS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=907064744&single=true&output=csv";
 const dealGrid = document.getElementById("dealGrid");
+let activeDealCategory = "ทั้งหมด";
 
 function parseCsv(text) {
   const rows = [];
@@ -368,13 +369,35 @@ function renderDeals(items) {
     return;
   }
 
-  items.forEach(item => {
-    const category = getField(item, ["category", "หมวด", "หมวดสินค้า"]) || "Deal";
-    const title = getField(item, ["title", "ชื่อสินค้า", "หัวข้อ"]);
-    const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
-    const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
-    const price = getField(item, ["price", "ราคา", "โปร"]);
-    if (!title) return;
+  const deals = items
+    .map(item => ({
+      category: getField(item, ["category", "หมวด", "หมวดสินค้า", "tag", "แท็ก", "ประเภท"]) || "Deal",
+      title: getField(item, ["title", "ชื่อสินค้า", "หัวข้อ", "ชื่อดีล", "ดีล", "สินค้า", "name", "product", "product_name"]),
+      description: getField(item, ["description", "รายละเอียด", "คำอธิบาย", "description_short", "คำโปรย"]),
+      image: resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ", "image_url", "รูปสินค้า"])),
+      price: getField(item, ["price", "ราคา", "โปร", "ส่วนลด", "discount"]),
+      link: getField(item, ["link", "ลิงก์", "ลิงค์", "url", "URL", "affiliate", "affiliate_link", "ลิงก์สินค้า", "ลิงค์สินค้า"])
+    }))
+    .filter(item => item.title);
+
+  const categories = [...new Set(deals.map(item => item.category).filter(Boolean))];
+  if (activeDealCategory !== "ทั้งหมด" && !categories.includes(activeDealCategory)) {
+    activeDealCategory = "ทั้งหมด";
+  }
+
+  renderDealFilters(categories, items);
+
+  const visibleDeals = activeDealCategory === "ทั้งหมด"
+    ? deals
+    : deals.filter(item => item.category === activeDealCategory);
+
+  if (!visibleDeals.length) {
+    dealGrid.innerHTML = '<div class="product"><span class="product-icon">Deal</span><h3>ยังไม่มีดีลในหมวดนี้</h3><p>ลองเลือกหมวดอื่น หรือเพิ่มสินค้าใน Google Sheets</p></div>';
+    return;
+  }
+
+  visibleDeals.forEach(item => {
+    const { category, title, description, image, price, link } = item;
 
     const product = document.createElement("div");
     product.className = "product";
@@ -388,9 +411,15 @@ function renderDeals(items) {
       product.append(imageElement);
     } else {
       const badge = document.createElement("span");
+      badge.className = "product-icon";
       badge.textContent = category.slice(0, 6);
       product.append(badge);
     }
+
+    const tag = document.createElement("span");
+    tag.className = "tag deal-tag";
+    tag.textContent = category;
+    product.append(tag);
 
     const heading = document.createElement("h3");
     heading.textContent = title;
@@ -418,6 +447,36 @@ function renderDeals(items) {
     }
 
     dealGrid.append(product);
+  });
+}
+
+function renderDealFilters(categories, allItems) {
+  const dealSection = dealGrid.closest("section");
+  if (!dealSection) return;
+
+  let filter = dealSection.querySelector(".deal-filters");
+  if (!categories.length) {
+    if (filter) filter.remove();
+    return;
+  }
+
+  if (!filter) {
+    filter = document.createElement("div");
+    filter.className = "deal-filters";
+    dealGrid.before(filter);
+  }
+
+  filter.innerHTML = "";
+  ["ทั้งหมด", ...categories].forEach(category => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = category === activeDealCategory ? "active" : "";
+    button.textContent = category;
+    button.addEventListener("click", () => {
+      activeDealCategory = category;
+      renderDeals(allItems);
+    });
+    filter.append(button);
   });
 }
 
