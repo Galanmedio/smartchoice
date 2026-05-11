@@ -127,6 +127,7 @@ function renderNews(items) {
 
   const featured = visibleItems[0];
   const sideItems = visibleItems.slice(1, 4);
+  const moreItems = visibleItems.slice(4);
 
   if (featured) {
     const { item, index } = featured;
@@ -205,6 +206,51 @@ function renderNews(items) {
   });
 
   newsCards.append(sideList);
+
+  if (moreItems.length) {
+    const moreList = document.createElement("div");
+    moreList.className = "news-more-list";
+
+    moreItems.forEach(({ item, index }) => {
+      const category = getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว";
+      const title = getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]);
+      const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
+      const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
+
+      const article = document.createElement("article");
+      article.className = "card news-more-card";
+
+      if (image) {
+        const imageLink = document.createElement("a");
+        imageLink.href = "article.html?type=news&id=" + index;
+        const imageElement = document.createElement("img");
+        imageElement.className = "news-img";
+        imageElement.src = image;
+        imageElement.alt = title;
+        imageElement.loading = "lazy";
+        imageLink.append(imageElement);
+        article.append(imageLink);
+      }
+
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = category;
+
+      const heading = document.createElement("h3");
+      const headingLink = document.createElement("a");
+      headingLink.href = "article.html?type=news&id=" + index;
+      headingLink.textContent = title;
+      heading.append(headingLink);
+
+      const paragraph = document.createElement("p");
+      paragraph.textContent = makeExcerpt(description, 110);
+
+      article.append(tag, heading, paragraph);
+      moreList.append(article);
+    });
+
+    newsCards.append(moreList);
+  }
 }
 async function loadNews() {
   if (!newsCards) return;
