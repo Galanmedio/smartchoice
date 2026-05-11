@@ -32,6 +32,8 @@ const VIDEOS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZ
 const videoList = document.getElementById("videoList");
 const DEALS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=907064744&single=true&output=csv";
 const dealGrid = document.getElementById("dealGrid");
+let activeNewsCategory = "ทั้งหมด";
+let activeReviewCategory = "ทั้งหมด";
 let activeDealCategory = "ทั้งหมด";
 
 function parseCsv(text) {
@@ -93,9 +95,28 @@ function renderNews(items) {
   const validItems = items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => getField(item, ["title", "หัวข้อ", "หัวข้อข่าว"]));
+  const categories = [...new Set(validItems.map(({ item }) => getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว"))];
 
-  const featured = validItems[0];
-  const sideItems = validItems.slice(1, 4);
+  if (activeNewsCategory !== "ทั้งหมด" && !categories.includes(activeNewsCategory)) {
+    activeNewsCategory = "ทั้งหมด";
+  }
+
+  renderCategoryFilters(newsCards, "news-filters", categories, activeNewsCategory, (category) => {
+    activeNewsCategory = category;
+    renderNews(items);
+  });
+
+  const visibleItems = activeNewsCategory === "ทั้งหมด"
+    ? validItems
+    : validItems.filter(({ item }) => (getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว") === activeNewsCategory);
+
+  if (!visibleItems.length) {
+    newsCards.innerHTML = '<article class="news-feature"><span class="tag">News</span><h3>ยังไม่มีข่าวในหมวดนี้</h3><p>ลองเลือกหมวดอื่น หรือเพิ่มข่าวใน Google Sheets</p></article>';
+    return;
+  }
+
+  const featured = visibleItems[0];
+  const sideItems = visibleItems.slice(1, 4);
 
   if (featured) {
     const { item, index } = featured;
@@ -208,13 +229,34 @@ function renderReviews(items) {
     return;
   }
 
-  items.forEach((item, index) => {
+  const reviews = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => getField(item, ["title", "หัวข้อ", "หัวข้อรีวิว"]));
+  const categories = [...new Set(reviews.map(({ item }) => getField(item, ["category", "หมวด", "หมวดรีวิว"]) || "รีวิว"))];
+
+  if (activeReviewCategory !== "ทั้งหมด" && !categories.includes(activeReviewCategory)) {
+    activeReviewCategory = "ทั้งหมด";
+  }
+
+  renderCategoryFilters(reviewList, "review-filters", categories, activeReviewCategory, (category) => {
+    activeReviewCategory = category;
+    renderReviews(items);
+  });
+
+  const visibleReviews = activeReviewCategory === "ทั้งหมด"
+    ? reviews
+    : reviews.filter(({ item }) => (getField(item, ["category", "หมวด", "หมวดรีวิว"]) || "รีวิว") === activeReviewCategory);
+
+  if (!visibleReviews.length) {
+    reviewList.innerHTML = '<article><div class="thumb">รีวิว</div><div><h3>ยังไม่มีรีวิวในหมวดนี้</h3><p>ลองเลือกหมวดอื่น หรือเพิ่มรีวิวใน Google Sheets</p></div></article>';
+    return;
+  }
+
+  visibleReviews.forEach(({ item, index }) => {
     const category = getField(item, ["category", "หมวด", "หมวดรีวิว"]) || "รีวิว";
     const title = getField(item, ["title", "หัวข้อ", "หัวข้อรีวิว"]);
     const description = getField(item, ["description", "รายละเอียด", "คำอธิบาย"]);
     const image = resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ"]));
-
-    if (!title) return;
 
     const article = document.createElement("article");
     const media = document.createElement(image ? "img" : "div");
@@ -250,6 +292,33 @@ function renderReviews(items) {
 
     article.append(media, content);
     reviewList.append(article);
+  });
+}
+
+function renderCategoryFilters(container, className, categories, activeCategory, onSelect) {
+  const section = container.closest("section");
+  if (!section) return;
+
+  let filter = section.querySelector("." + className);
+  if (!categories.length) {
+    if (filter) filter.remove();
+    return;
+  }
+
+  if (!filter) {
+    filter = document.createElement("div");
+    filter.className = "content-filters " + className;
+    container.before(filter);
+  }
+
+  filter.innerHTML = "";
+  ["ทั้งหมด", ...categories].forEach(category => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = category === activeCategory ? "active" : "";
+    button.textContent = category;
+    button.addEventListener("click", () => onSelect(category));
+    filter.append(button);
   });
 }
 
