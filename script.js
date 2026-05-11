@@ -95,6 +95,49 @@ function isPublishedItem(item) {
   return !status || ["publish", "published", "เผยแพร่", "online"].includes(status);
 }
 
+function getNewsDateValue(item) {
+  const dateText = getField(item, ["date", "วันที่", "published_at", "วันเผยแพร่"]);
+  const parsed = Date.parse(dateText);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function getNewsPinValue(item) {
+  const pinText = getField(item, ["pin", "pinned", "ปักหมุด", "ตำแหน่ง"]).trim();
+  const pin = Number(pinText);
+  return Number.isInteger(pin) && pin >= 1 && pin <= 4 ? pin : 0;
+}
+
+function sortNewsByLatest(items) {
+  return [...items].sort((a, b) => {
+    const dateDiff = getNewsDateValue(b.item) - getNewsDateValue(a.item);
+    if (dateDiff) return dateDiff;
+    return b.index - a.index;
+  });
+}
+
+function orderNewsForHomepage(items) {
+  const latestItems = sortNewsByLatest(items);
+  const pinnedSlots = new Map();
+
+  latestItems.forEach(entry => {
+    const pin = getNewsPinValue(entry.item);
+    if (pin && !pinnedSlots.has(pin)) {
+      pinnedSlots.set(pin, entry);
+    }
+  });
+
+  const ordered = [];
+  for (let slot = 1; slot <= 4; slot += 1) {
+    if (pinnedSlots.has(slot)) ordered.push(pinnedSlots.get(slot));
+  }
+
+  latestItems.forEach(entry => {
+    if (!ordered.includes(entry)) ordered.push(entry);
+  });
+
+  return ordered;
+}
+
 function renderNews(items) {
   if (!newsCards) return;
   const isAllNewsPage = document.body.classList.contains("all-news-page");
@@ -122,8 +165,9 @@ function renderNews(items) {
   const visibleItems = activeNewsCategory === "ทั้งหมด"
     ? validItems
     : validItems.filter(({ item }) => (getField(item, ["category", "หมวด", "หมวดข่าว"]) || "ข่าว") === activeNewsCategory);
+  const orderedItems = isAllNewsPage ? sortNewsByLatest(visibleItems) : orderNewsForHomepage(visibleItems);
 
-  if (!visibleItems.length) {
+  if (!orderedItems.length) {
     newsCards.innerHTML = '<article class="news-feature"><span class="tag">News</span><h3>ยังไม่มีข่าวในหมวดนี้</h3><p>ลองเลือกหมวดอื่น หรือเพิ่มข่าวใน Google Sheets</p></article>';
     return;
   }
@@ -132,7 +176,7 @@ function renderNews(items) {
     const allList = document.createElement("div");
     allList.className = "news-all-grid";
 
-    visibleItems.forEach(({ item, index }) => {
+    orderedItems.forEach(({ item, index }) => {
       allList.append(createNewsCard(item, index));
     });
 
@@ -140,8 +184,8 @@ function renderNews(items) {
     return;
   }
 
-  const featured = visibleItems[0];
-  const sideItems = visibleItems.slice(1, 4);
+  const featured = orderedItems[0];
+  const sideItems = orderedItems.slice(1, 4);
 
   if (featured) {
     const { item, index } = featured;
@@ -221,7 +265,7 @@ function renderNews(items) {
 
   newsCards.append(sideList);
 
-  if (visibleItems.length > 4) {
+  if (orderedItems.length > 4) {
     const action = document.createElement("div");
     action.className = "news-home-action";
     action.innerHTML = '<a class="btn" href="news.html">ดูข่าวทั้งหมด</a>';
