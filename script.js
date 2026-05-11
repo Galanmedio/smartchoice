@@ -26,6 +26,8 @@ btuForm.addEventListener("submit", (event) => {
 });
 const NEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=0&single=true&output=csv";
 const newsCards = document.getElementById("newsCards");
+const GUIDES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=670004676&single=true&output=csv";
+const guideCards = document.getElementById("guideCards");
 const REVIEWS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=2024619029&single=true&output=csv";
 const reviewList = document.getElementById("reviewList");
 const VIDEOS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=1483108495&single=true&output=csv";
@@ -33,6 +35,7 @@ const videoList = document.getElementById("videoList");
 const DEALS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQeq6tVZpZXyff-ARbdhPFLDAavmLTpk1J4K-lOOuyTakoJkHK3bXIb7MhBSRefbV61N1QNADPRDaQl/pub?gid=907064744&single=true&output=csv";
 const dealGrid = document.getElementById("dealGrid");
 let activeNewsCategory = "ทั้งหมด";
+let activeGuideCategory = "ทั้งหมด";
 let activeReviewCategory = "ทั้งหมด";
 let activeDealCategory = "ทั้งหมด";
 
@@ -218,6 +221,108 @@ function resolveImageUrl(image) {
   if (!image) return "";
   if (/^https?:\/\//i.test(image)) return image;
   return image.replace(/^\/+/, "");
+}
+
+function renderGuides(items) {
+  if (!guideCards) return;
+
+  guideCards.innerHTML = "";
+  if (!items.length) {
+    guideCards.innerHTML = '<article class="card"><span class="tag">Guide</span><h3>ยังไม่มีข้อมูลเราช่วยเลือก</h3><p>เพิ่มข้อมูลใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</p></article>';
+    return;
+  }
+
+  const guides = items
+    .map(item => ({
+      category: getField(item, ["category", "หมวด", "หมวดสินค้า", "tag", "แท็ก", "ประเภท"]) || "เราช่วยเลือก",
+      title: getField(item, ["title", "หัวข้อ", "ชื่อเรื่อง", "ชื่อสินค้า", "สินค้า", "name"]),
+      description: getField(item, ["description", "รายละเอียด", "คำอธิบาย", "description_short", "คำโปรย"]),
+      image: resolveImageUrl(getField(item, ["image", "รูป", "รูปภาพ", "image_url"])),
+      price: getField(item, ["price", "ราคา", "งบ", "budget"]),
+      link: getField(item, ["link", "ลิงก์", "ลิงค์", "url", "URL"])
+    }))
+    .filter(item => item.title);
+
+  const categories = [...new Set(guides.map(item => item.category).filter(Boolean))];
+  if (activeGuideCategory !== "ทั้งหมด" && !categories.includes(activeGuideCategory)) {
+    activeGuideCategory = "ทั้งหมด";
+  }
+
+  renderCategoryFilters(guideCards, "guide-filters", categories, activeGuideCategory, (category) => {
+    activeGuideCategory = category;
+    renderGuides(items);
+  });
+
+  const visibleGuides = activeGuideCategory === "ทั้งหมด"
+    ? guides
+    : guides.filter(item => item.category === activeGuideCategory);
+
+  if (!visibleGuides.length) {
+    guideCards.innerHTML = '<article class="card"><span class="tag">Guide</span><h3>ยังไม่มีข้อมูลในหมวดนี้</h3><p>ลองเลือกหมวดอื่น หรือเพิ่มข้อมูลใน Google Sheets</p></article>';
+    return;
+  }
+
+  visibleGuides.forEach(item => {
+    const article = document.createElement("article");
+    article.className = "card";
+
+    if (item.image) {
+      const imageElement = document.createElement("img");
+      imageElement.className = "guide-img";
+      imageElement.src = item.image;
+      imageElement.alt = item.title;
+      imageElement.loading = "lazy";
+      article.append(imageElement);
+    }
+
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = item.category;
+
+    const heading = document.createElement("h3");
+    heading.textContent = item.title;
+
+    article.append(tag, heading);
+
+    if (item.price) {
+      const priceElement = document.createElement("strong");
+      priceElement.className = "price";
+      priceElement.textContent = item.price;
+      article.append(priceElement);
+    }
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent = makeExcerpt(item.description, 130);
+    article.append(paragraph);
+
+    if (item.link) {
+      const anchor = document.createElement("a");
+      anchor.href = item.link;
+      anchor.target = item.link.startsWith("#") ? "" : "_blank";
+      anchor.rel = item.link.startsWith("#") ? "" : "noopener";
+      anchor.textContent = "ดูเพิ่มเติม →";
+      article.append(anchor);
+    }
+
+    guideCards.append(article);
+  });
+}
+
+async function loadGuides() {
+  if (!guideCards) return;
+
+  try {
+    const response = await fetch(GUIDES_CSV_URL);
+    if (!response.ok) throw new Error("Cannot load guides CSV");
+
+    const csv = await response.text();
+    const rows = parseCsv(csv);
+    const headers = rows.shift().map(header => header.trim());
+    const items = rows.map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+    renderGuides(items);
+  } catch (error) {
+    guideCards.innerHTML = '<article class="card"><span class="tag">Guide</span><h3>โหลดข้อมูลเราช่วยเลือกไม่สำเร็จ</h3><p>ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</p></article>';
+  }
 }
 
 function renderReviews(items) {
@@ -566,6 +671,7 @@ async function loadDeals() {
   }
 }
 loadNews();
+loadGuides();
 loadReviews();
 loadVideos();
 loadDeals();
