@@ -344,6 +344,7 @@ function renderGuides(items) {
   }
 
   const guides = items
+    .filter(item => isPublishedItem(item))
     .map(item => ({
       category: getField(item, ["category", "หมวด", "หมวดสินค้า", "tag", "แท็ก", "ประเภท"]) || "เราช่วยเลือก",
       title: getField(item, ["title", "หัวข้อ", "ชื่อเรื่อง", "ชื่อสินค้า", "สินค้า", "name"]),
@@ -446,6 +447,7 @@ function renderCompare(items) {
   }
 
   const rows = items
+    .filter(item => isPublishedItem(item))
     .map(item => ({
       title: getField(item, ["title", "หัวข้อ", "สินค้า", "ชื่อสินค้า", "name"]),
       suitable: getField(item, ["suitable", "เหมาะกับ", "เหมาะสำหรับ", "กลุ่มเป้าหมาย"]),

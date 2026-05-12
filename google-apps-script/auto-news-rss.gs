@@ -34,6 +34,7 @@ const NEWS_HEADERS = [
 ];
 
 const GUIDES_HEADERS = [
+  "status",
   "category",
   "title",
   "description",
@@ -46,6 +47,7 @@ const GUIDES_HEADERS = [
 ];
 
 const COMPARE_HEADERS = [
+  "status",
   "category",
   "หัวข้อ",
   "เหมาะกับ",
@@ -118,6 +120,7 @@ function draftGuidesFromLinks() {
       const page = fetchPageSummary_(source, row[indexes.title], row[indexes.description]);
       const draft = createThaiGuideDraft_(page);
 
+      sheet.getRange(rowIndex + 1, indexes.status + 1).setValue(row[indexes.status] || "draft");
       sheet.getRange(rowIndex + 1, indexes.category + 1).setValue(row[indexes.category] || draft.category || "เราช่วยเลือก");
       sheet.getRange(rowIndex + 1, indexes.title + 1).setValue(row[indexes.title] || draft.title || page.title);
       sheet.getRange(rowIndex + 1, indexes.description + 1).setValue(row[indexes.description] || draft.description || "");
@@ -127,6 +130,7 @@ function draftGuidesFromLinks() {
       sheet.getRange(rowIndex + 1, indexes.date + 1).setValue(row[indexes.date] || Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd"));
       processed += 1;
     } catch (error) {
+      sheet.getRange(rowIndex + 1, indexes.status + 1).setValue("error");
       sheet.getRange(rowIndex + 1, indexes.description + 1).setValue("ดึงลิงก์นี้ไม่สำเร็จ: " + error.message);
       processed += 1;
     }
@@ -154,6 +158,7 @@ function draftCompareFromLinks() {
       const page = fetchPageSummary_(source, row[indexes["หัวข้อ"]], row[indexes["เนื้อหา"]]);
       const draft = createThaiCompareDraft_(page);
 
+      sheet.getRange(rowIndex + 1, indexes.status + 1).setValue(row[indexes.status] || "draft");
       sheet.getRange(rowIndex + 1, indexes.category + 1).setValue(row[indexes.category] || draft.category || "เปรียบเทียบ");
       sheet.getRange(rowIndex + 1, indexes["หัวข้อ"] + 1).setValue(row[indexes["หัวข้อ"]] || draft.title || page.title);
       sheet.getRange(rowIndex + 1, indexes["เหมาะกับ"] + 1).setValue(row[indexes["เหมาะกับ"]] || draft.suitable || "");
@@ -164,6 +169,7 @@ function draftCompareFromLinks() {
       sheet.getRange(rowIndex + 1, indexes.date + 1).setValue(row[indexes.date] || Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd"));
       processed += 1;
     } catch (error) {
+      sheet.getRange(rowIndex + 1, indexes.status + 1).setValue("error");
       sheet.getRange(rowIndex + 1, indexes["เนื้อหา"] + 1).setValue("ดึงลิงก์นี้ไม่สำเร็จ: " + error.message);
       processed += 1;
     }
