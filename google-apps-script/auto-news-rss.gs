@@ -102,7 +102,7 @@ function draftGuidesFromLinks() {
   ensureColumns_(sheet, GUIDES_HEADERS);
 
   const values = sheet.getDataRange().getValues();
-  const headers = values[0];
+  const headers = getCurrentHeaders_(sheet);
   const indexes = getIndexesForHeaders_(headers, GUIDES_HEADERS);
   let processed = 0;
 
@@ -138,7 +138,7 @@ function draftCompareFromLinks() {
   ensureColumns_(sheet, COMPARE_HEADERS);
 
   const values = sheet.getDataRange().getValues();
-  const headers = values[0];
+  const headers = getCurrentHeaders_(sheet);
   const indexes = getIndexesForHeaders_(headers, COMPARE_HEADERS);
   let processed = 0;
 
@@ -211,6 +211,11 @@ function ensureColumns_(sheet, requiredHeaders) {
   if (missingHeaders.length) {
     sheet.getRange(1, headers.length + 1, 1, missingHeaders.length).setValues([missingHeaders]);
   }
+}
+
+function getCurrentHeaders_(sheet) {
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  return sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
 }
 
 function getIndexesForHeaders_(headers, requiredHeaders) {
