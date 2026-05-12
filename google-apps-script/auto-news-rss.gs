@@ -60,10 +60,10 @@ const COMPARE_HEADERS = [
 
 function draftNewsFromLinks() {
   const sheet = getNewsSheet_();
-  ensureHeaders_(sheet);
+  ensureColumns_(sheet, NEWS_HEADERS);
 
   const values = sheet.getDataRange().getValues();
-  const headers = values[0];
+  const headers = getCurrentHeaders_(sheet);
   const indexes = getHeaderIndexes_(headers);
   let processed = 0;
 
