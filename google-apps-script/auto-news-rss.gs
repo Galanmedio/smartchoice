@@ -50,12 +50,17 @@ const COMPARE_HEADERS = [
   "status",
   "category",
   "หัวข้อ",
+  "สินค้า A",
+  "สินค้า B",
   "เหมาะกับ",
+  "จุดเด่น A",
+  "จุดเด่น B",
+  "ข้อควรระวัง A",
+  "ข้อควรระวัง B",
+  "สรุปเลือกตัวไหนดี",
+  "เนื้อหา",
   "image",
   "price",
-  "จุดเด่น",
-  "ข้อควรระวัง",
-  "เนื้อหา",
   "source",
   "date"
 ];
@@ -167,11 +172,16 @@ function draftCompareFromLinks() {
       sheet.getRange(rowIndex + 1, indexes.status + 1).setValue(row[indexes.status] || "draft");
       sheet.getRange(rowIndex + 1, indexes.category + 1).setValue(row[indexes.category] || draft.category || "เปรียบเทียบ");
       sheet.getRange(rowIndex + 1, indexes["หัวข้อ"] + 1).setValue(row[indexes["หัวข้อ"]] || draft.title || page.title);
+      sheet.getRange(rowIndex + 1, indexes["สินค้า A"] + 1).setValue(row[indexes["สินค้า A"]] || draft.productA || "");
+      sheet.getRange(rowIndex + 1, indexes["สินค้า B"] + 1).setValue(row[indexes["สินค้า B"]] || draft.productB || "");
       sheet.getRange(rowIndex + 1, indexes["เหมาะกับ"] + 1).setValue(row[indexes["เหมาะกับ"]] || draft.suitable || "");
       sheet.getRange(rowIndex + 1, indexes.image + 1).setValue(row[indexes.image] || draft.image || page.image || "");
-      sheet.getRange(rowIndex + 1, indexes["จุดเด่น"] + 1).setValue(row[indexes["จุดเด่น"]] || draft.highlight || "");
-      sheet.getRange(rowIndex + 1, indexes["ข้อควรระวัง"] + 1).setValue(row[indexes["ข้อควรระวัง"]] || draft.caution || "");
-      sheet.getRange(rowIndex + 1, indexes["เนื้อหา"] + 1).setValue(row[indexes["เนื้อหา"]] || draft.caution || "");
+      sheet.getRange(rowIndex + 1, indexes["จุดเด่น A"] + 1).setValue(row[indexes["จุดเด่น A"]] || draft.highlightA || "");
+      sheet.getRange(rowIndex + 1, indexes["จุดเด่น B"] + 1).setValue(row[indexes["จุดเด่น B"]] || draft.highlightB || "");
+      sheet.getRange(rowIndex + 1, indexes["ข้อควรระวัง A"] + 1).setValue(row[indexes["ข้อควรระวัง A"]] || draft.cautionA || "");
+      sheet.getRange(rowIndex + 1, indexes["ข้อควรระวัง B"] + 1).setValue(row[indexes["ข้อควรระวัง B"]] || draft.cautionB || "");
+      sheet.getRange(rowIndex + 1, indexes["สรุปเลือกตัวไหนดี"] + 1).setValue(row[indexes["สรุปเลือกตัวไหนดี"]] || draft.recommendation || "");
+      sheet.getRange(rowIndex + 1, indexes["เนื้อหา"] + 1).setValue(row[indexes["เนื้อหา"]] || draft.recommendation || "");
       sheet.getRange(rowIndex + 1, indexes.date + 1).setValue(row[indexes.date] || Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd"));
       processed += 1;
     } catch (error) {
@@ -334,11 +344,13 @@ function createThaiGuideDraft_(page) {
 function createThaiCompareDraft_(page) {
   return createDraftWithPrompt_([
     "สรุปข้อมูลภาษาไทยสำหรับตาราง 'เปรียบเทียบก่อนซื้อ' ของเว็บ Smart Choice จากลิงก์ต้นทางนี้",
-    "ให้ตอบเป็น JSON เท่านั้น โดยมี key: category,title,suitable,highlight,caution",
-    "title คือหัวข้อ/ชื่อสิ่งที่เปรียบเทียบ",
+    "ให้ตอบเป็น JSON เท่านั้น โดยมี key: category,title,productA,productB,suitable,highlightA,highlightB,cautionA,cautionB,recommendation",
+    "title คือหัวข้อการเปรียบเทียบ",
+    "productA และ productB คือชื่อสินค้าหรือทางเลือกที่เทียบกัน",
     "suitable คือเหมาะกับใคร",
-    "highlight คือจุดเด่นแบบสั้น",
-    "caution คือข้อควรระวังหรือข้อจำกัดแบบสั้น",
+    "highlightA และ highlightB คือจุดเด่นของแต่ละฝั่งแบบสั้น",
+    "cautionA และ cautionB คือข้อควรระวังของแต่ละฝั่งแบบสั้น",
+    "recommendation คือสรุปเลือกตัวไหนดีแบบเข้าใจง่าย",
     "ห้ามคัดลอกต้นฉบับแบบยาว ให้สรุปใหม่ด้วยภาษาของตัวเอง",
     "",
     "หัวข้อจากเว็บต้นทาง: " + page.title,

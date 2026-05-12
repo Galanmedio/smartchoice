@@ -442,7 +442,7 @@ function renderCompare(items) {
 
   compareTableBody.innerHTML = "";
   if (!items.length) {
-    compareTableBody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลเปรียบเทียบ เพิ่มข้อมูลใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</td></tr>';
+    compareTableBody.innerHTML = '<tr><td colspan="5">ยังไม่มีข้อมูลเปรียบเทียบ เพิ่มข้อมูลใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</td></tr>';
     return;
   }
 
@@ -450,20 +450,21 @@ function renderCompare(items) {
     .filter(item => isPublishedItem(item))
     .map(item => ({
       title: getField(item, ["title", "หัวข้อ", "สินค้า", "ชื่อสินค้า", "name"]),
+      productA: getField(item, ["สินค้า A", "productA", "product_a", "ตัวเลือก A"]),
+      productB: getField(item, ["สินค้า B", "productB", "product_b", "ตัวเลือก B"]),
       suitable: getField(item, ["suitable", "เหมาะกับ", "เหมาะสำหรับ", "กลุ่มเป้าหมาย"]),
-      highlight: getField(item, ["highlight", "จุดเด่น", "ข้อดี", "เด่น"]),
-      caution: getField(item, ["caution", "ข้อควรระวัง", "ข้อเสีย", "ข้อจำกัด", "เนื้อหา", "description", "รายละเอียด"])
+      summary: getField(item, ["สรุปเลือกตัวไหนดี", "recommendation", "summary", "สรุป", "เนื้อหา", "description", "รายละเอียด"])
     }))
-    .filter(item => item.title || item.suitable || item.highlight || item.caution);
+    .filter(item => item.title || item.productA || item.productB || item.suitable || item.summary);
 
   if (!rows.length) {
-    compareTableBody.innerHTML = '<tr><td colspan="4">ยังไม่มีข้อมูลเปรียบเทียบ เพิ่มข้อมูลใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</td></tr>';
+    compareTableBody.innerHTML = '<tr><td colspan="5">ยังไม่มีข้อมูลเปรียบเทียบ เพิ่มข้อมูลใน Google Sheets แล้วข้อมูลจะแสดงที่นี่</td></tr>';
     return;
   }
 
   rows.forEach(item => {
     const row = document.createElement("tr");
-    [item.title, item.suitable, item.highlight, item.caution].forEach(value => {
+    [item.title, item.productA, item.productB, item.suitable, item.summary].forEach(value => {
       const cell = document.createElement("td");
       cell.textContent = value || "-";
       row.append(cell);
@@ -485,7 +486,7 @@ async function loadCompare() {
     const items = rows.map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
     renderCompare(items);
   } catch (error) {
-    compareTableBody.innerHTML = '<tr><td colspan="4">โหลดข้อมูลเปรียบเทียบไม่สำเร็จ ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</td></tr>';
+    compareTableBody.innerHTML = '<tr><td colspan="5">โหลดข้อมูลเปรียบเทียบไม่สำเร็จ ตรวจสอบว่าลิงก์ Google Sheets เผยแพร่เป็น CSV แล้ว</td></tr>';
   }
 }
 
