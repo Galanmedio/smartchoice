@@ -60,6 +60,12 @@ const COMPARE_HEADERS = [
   "date"
 ];
 
+function setupSmartChoiceSheets() {
+  ensureColumns_(getSheetByNameOrCreate_(NEWS_SHEET_NAME), NEWS_HEADERS);
+  ensureColumns_(getSheetByNameOrCreate_(GUIDES_SHEET_NAME), GUIDES_HEADERS);
+  ensureColumns_(getSheetByNameOrCreate_(COMPARE_SHEET_NAME), COMPARE_HEADERS);
+}
+
 function draftNewsFromLinks() {
   const sheet = getNewsSheet_();
   ensureColumns_(sheet, NEWS_HEADERS);
@@ -184,6 +190,11 @@ function getNewsSheet_() {
 function getSheetByNameOrActive_(sheetName) {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   return spreadsheet.getSheetByName(sheetName) || spreadsheet.getActiveSheet();
+}
+
+function getSheetByNameOrCreate_(sheetName) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  return spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
 }
 
 function ensureHeaders_(sheet) {
